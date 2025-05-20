@@ -2,7 +2,7 @@
 
 <main id="homepage">
     <div class="featured-card-container">
-        <div class="card featured-card" tabindex="0" onclick="window.location.href='/Live/IndexLive'">
+        <div class="card featured-card" tabindex="0" onclick="window.location.href='@Model.FeaturedStream.StreamUrl'">
             <div class="card-img-wrapper">
                 <img class="card-img-top" src="@Model.FeaturedStream.ThumbnailUrl" alt="Hình thu nhỏ trực tiếp nổi bật" loading="lazy">
                 <span class="featured-badge">TRỰC TIẾP NỔI BẬT</span>
@@ -17,7 +17,7 @@
     <section class="streams-grid" aria-label="Các livestream">
         @foreach (var stream in Model.Streams)
         {
-            <div class="stream-card" tabindex="0" role="button" aria-pressed="false" onclick="window.location.href='/Live/IndexLive'">
+            <div class="stream-card" tabindex="0" role="button" aria-pressed="false" onclick="window.location.href='@stream.StreamUrl'">
                 <div class="stream-thumb" style="background-image: url('@stream.ThumbnailUrl');"></div>
                 <div class="stream-info">
                     <div class="stream-title" title="@stream.Title">@stream.Title</div>

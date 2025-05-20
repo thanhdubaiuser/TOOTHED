@@ -21,6 +21,22 @@
       "PackagePath": "staticwebassets\\images\\stream2.jpg"
     },
     {
+      "Id": "D:\\code web1\\MYWEBAPP\\wwwroot\\images\\stream3.jpg",
+      "PackagePath": "staticwebassets\\images\\stream3.jpg"
+    },
+    {
+      "Id": "D:\\code web1\\MYWEBAPP\\wwwroot\\images\\stream4.jpg",
+      "PackagePath": "staticwebassets\\images\\stream4.jpg"
+    },
+    {
+      "Id": "D:\\code web1\\MYWEBAPP\\wwwroot\\images\\stream5.jpg",
+      "PackagePath": "staticwebassets\\images\\stream5.jpg"
+    },
+    {
+      "Id": "D:\\code web1\\MYWEBAPP\\wwwroot\\images\\stream6.jpg",
+      "PackagePath": "staticwebassets\\images\\stream6.jpg"
+    },
+    {
       "Id": "D:\\code web1\\MYWEBAPP\\wwwroot\\js\\site.js",
       "PackagePath": "staticwebassets\\js\\site.js"
     },
