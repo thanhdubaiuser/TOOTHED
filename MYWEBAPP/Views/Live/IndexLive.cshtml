@@ -1,0 +1,91 @@
+@{
+    ViewData["Title"] = "Live Stream";
+    var streamerName = ViewData["StreamerName"] as string ?? "StreamerName";
+}
+<main class="container" role="main">
+    <div class="left-column">
+        <div class="stream-header-info"> <!-- Wrapper cho tiêu đề và thông tin stream -->
+            <h2 class="live-stream-page-title">Live Stream của <span id="streamer-name">@streamerName</span></h2>
+            <!-- Bạn có thể thêm thông tin khác ở đây như số người xem, thể loại -->
+            <!-- <p class="live-stream-details">Thể loại: Gaming | 1,234 người xem</p> -->
+        </div>
+        <div class="video-container">
+            <video id="live-video" controls autoplay muted>
+                <source src="/assets/videos/sample-live-stream.mp4" type="video/mp4" />
+                Trình duyệt của bạn không hỗ trợ video.
+            </video>
+        </div>
+        <div class="stream-description-box"> <!-- Khung mô tả stream -->
+            <h3>Thông tin về buổi stream</h3>
+            <p>Đây là mô tả chi tiết về nội dung của buổi live stream này. @streamerName sẽ chia sẻ những điều thú vị và tương tác cùng mọi người.</p>
+        </div>
+    </div>
+
+    <aside class="right-column" aria-label="Phòng chat và gửi tin nhắn">
+        <h5 class="px-3 pt-3">Phòng chat với <span id="streamer-name-2">@streamerName</span></h5>
+        <div id="chat-window" class="chat-window" aria-live="polite" aria-relevant="additions" role="log" tabindex="0" aria-atomic="false">
+            <!-- Tin nhắn chat sẽ hiển thị ở đây -->
+            <div class="chat-message"><strong>Hệ thống:</strong> Chào mừng bạn đến với phòng chat!</div>
+        </div>
+        <form id="chat-form" class="chat-input-group" aria-label="Gửi tin nhắn chat">
+            <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." aria-label="Nhập tin nhắn chat" autocomplete="off" required />
+            <button type="submit" aria-label="Gửi tin nhắn">Gửi</button>
+        </form>
+    </aside>
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cập nhật tên streamer ở cả hai nơi
+        const streamer = "@streamerName";
+        document.getElementById('streamer-name').textContent = streamer;
+        document.getElementById('streamer-name-2').textContent = streamer;
+        
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatWindow = document.getElementById('chat-window');
+        
+        // Thêm một số tin nhắn mẫu
+        setTimeout(() => {
+            addMessage(streamer, "Chào mừng mọi người đến với buổi live stream hôm nay!");
+        }, 2000);
+        
+        // Xử lý gửi tin nhắn
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            // Thêm tin nhắn vào khung chat
+            addMessage("Bạn", text);
+            
+            // Xóa nội dung input và focus lại
+            chatInput.value = '';
+            chatInput.focus();
+            
+            // Giả lập phản hồi từ streamer
+            if (Math.random() > 0.7) {
+                setTimeout(() => {
+                    addMessage(streamer, "Cảm ơn bạn đã tham gia chat!");
+                }, 1500);
+            }
+        });
+        
+        // Hàm thêm tin nhắn vào khung chat
+        function addMessage(sender, text) {
+            const msg = document.createElement('div');
+            msg.classList.add('chat-message');
+            msg.innerHTML = `<strong>${sanitize(sender)}:</strong> ${sanitize(text)}`;
+            chatWindow.appendChild(msg);
+            
+            // Cuộn xuống để hiển thị tin nhắn mới nhất
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+        
+        // Hàm làm sạch văn bản để tránh XSS
+        function sanitize(str) {
+            const tmp = document.createElement('div');
+            tmp.textContent = str;
+            return tmp.innerHTML;
+        }
+    });
+</script>

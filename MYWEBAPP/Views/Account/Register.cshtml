@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Đăng Ký";
+}
+
+<main id="register-page" aria-label="Trang đăng ký">
+    <h2>Đăng ký tài khoản LimoTV</h2>
+    <form id="register-form" aria-describedby="register-desc" onsubmit="event.preventDefault(); alert('Bạn đã đăng ký thành công!');">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text" id="username" name="username" autocomplete="username" required aria-required="true" placeholder="Nhập tên đăng nhập" />
+        
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" required aria-required="true" placeholder="Nhập email" />
+        
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" name="password" autocomplete="new-password" required aria-required="true" placeholder="Nhập mật khẩu" />
+        
+        <label for="confirm-password">Xác nhận mật khẩu</label>
+        <input type="password" id="confirm-password" name="confirm-password" autocomplete="new-password" required aria-required="true" placeholder="Nhập lại mật khẩu" />
+        
+        <button type="submit">Đăng ký</button>
+    </form>
+    <div class="auth-links">
+            <p>Đã có tài khoản? <a href="/Account/Login">Đăng nhập</a></p>
+            <a href="/" id="back-home">Quay lại trang chủ</a>
+        </div>
+    </div>
+</main>
+
+<script>
+    const backHomeBtn = document.getElementById('back-home');
+
+    backHomeBtn.addEventListener('click', () => {
+        window.location.href = '/';
+    });
+
+    backHomeBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            backHomeBtn.click();
+        }
+    });
+</script>

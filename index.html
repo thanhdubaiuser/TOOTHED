@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>LimoTV - Xem Trực Tiếp</title>
+  <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121217;
+      color: #eee;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a {
+      color: #66ccff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      background: #1f1f2e;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #333;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #66ccff;
+      letter-spacing: 0.05em;
+      user-select: none;
+    }
+
+    nav {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 1rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      transition: background 0.3s;
+      cursor: pointer;
+    }
+    nav a:hover {
+      background: #66ccff22;
+    }
+
+    main {
+      flex: 1;
+      padding: 1rem 1.5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Featured stream */
+    .featured-stream {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(102,204,255,0.4);
+      margin-bottom: 2rem;
+      user-select: none;
+    }
+    .featured-stream video,
+    .featured-stream img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      aspect-ratio: 16/9;
+      filter: brightness(0.75);
+      transition: filter 0.3s;
+      border-radius: 10px;
+    }
+    .featured-stream:hover video,
+    .featured-stream:hover img {
+      filter: brightness(1);
+    }
+
+    .featured-info {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0,0,0,0.7);
+      max-width: 80%;
+    }
+    .featured-info h2 {
+      font-size: 1.8rem;
+      margin-bottom: 0.3rem;
+    }
+    .featured-info p {
+      font-size: 1rem;
+      opacity: 0.85;
+    }
+
+    /* Live streams grid */
+    .streams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .stream-card {
+      background: #1a1a2e;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(66,133,244,0.15);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .stream-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 20px rgba(102,204,255,0.6);
+    }
+    .stream-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background-position: center;
+      background-size: cover;
+      flex-shrink: 0;
+    }
+    .stream-info {
+      padding: 0.8rem 1rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .stream-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #cce7ff;
+      margin-bottom: 0.4rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .streamer-name {
+      font-size: 0.85rem;
+      color: #a0a8b3;
+      margin-bottom: 0.5rem;
+    }
+    .viewers {
+      font-size: 0.85rem;
+      color: #ff5555;
+      font-weight: 700;
+      align-self: flex-start;
+      background: #330000;
+      padding: 0.15rem 0.6rem;
+      border-radius: 12px;
+      user-select: none;
+    }
+
+    /* Categories */
+    .categories {
+      margin-top: 3rem;
+    }
+    .categories h3 {
+      margin-bottom: 1rem;
+      color: #66ccff;
+      font-weight: 700;
+    }
+    .category-list {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+    .category {
+      background: #282a3a;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      white-space: nowrap;
+      font-weight: 600;
+      color: #99d1ff;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.3s;
+      user-select: none;
+    }
+    .category:hover {
+      background: #66ccff;
+      color: #121217;
+    }
+
+    /* Footer */
+    footer {
+      background: #1f1f2e;
+      text-align: center;
+      color: #555c6b;
+      font-size: 0.85rem;
+      padding: 1rem;
+      border-top: 1px solid #333;
+      user-select: none;
+    }
+
+    /* Scrollbar for category list */
+    .category-list::-webkit-scrollbar {
+      height: 6px;
+    }
+    .category-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .category-list::-webkit-scrollbar-thumb {
+      background: #66ccff88;
+      border-radius: 4px;
+    }
+
+    /* Responsive adjustments */
+    @media(max-width: 600px) {
+      header {
+        justify-content: center;
+        gap: 1.5rem;
+      }
+      nav {
+        justify-content: center;
+      }
+      .featured-info h2 {
+        font-size: 1.4rem;
+      }
+      .streams-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.75rem;
+      }
+      .stream-title {
+        font-size: 0.9rem;
+      }
+      .stream-info {
+        padding: 0.5rem 0.8rem;
+      }
+      .category {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" tabindex="0" aria-label="Trang chủ LimoTV">LimoTV</div>
+    <nav role="navigation" aria-label="Menu chính">
+      <a href="#" tabindex="0">Trang chủ</a>
+      <a href="#" tabindex="0">Thể loại</a>
+      <a href="#" tabindex="0">Streamers Hàng Đầu</a>
+      <a href="#" tabindex="0">Giới thiệu</a>
+      <a href="login.html" tabindex="0" id="login-link">Đăng nhập</a>
+    </nav>
+  </header>
+
+  <main id="homepage">
+    <section class="featured-stream" role="region" aria-label="Trực tiếp nổi bật" tabindex="0" onclick="alert('Đi tới trực tiếp nổi bật!')">
+      <img src="https://images.pexels.com/photos/1022929/pexels-photo-1022929.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260" alt="Hình thu nhỏ trực tiếp nổi bật" loading="lazy" />
+      <div class="featured-info">
+        <h2>Chuyên Gia Game Chơi Hành Động Kịch Tính</h2>
+        <p>Tham gia cùng hơn 5.400 người xem trực tiếp</p>
+      </div>
+    </section>
+
+    <section class="streams-grid" aria-label="Các livestream">
+      <!-- Các thẻ stream ví dụ -->
+      <div class="stream-card" tabindex="0" role="button" aria-pressed="false" onclick="alert('Đi tới livestream 1')">
+        <div class="stream-thumb" style="background-image: url('https://images.pexels.com/photos/1181319/pexels-photo-1181319.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260');"></div>
+        <div class="stream-info">
+          <div class="stream-title" title="Chiến thuật đỉnh cao">Chiến thuật đỉnh cao</div>
+          <div class="streamer-name">StrategistPro</div>
+          <div class="viewers" aria-label="3500 người xem">3.5K</div>
+        </div>
+      </div>
+      <div class="stream-card" tabindex="0" role="button" aria-pressed="false" onclick="alert('Đi tới livestream 2')">
+        <div class="stream-thumb" style="background-image: url('https://images.pexels.com/photos/167964/pexels-photo-167964.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260');"></div>
+        <div class="stream-info">
+          <div class="stream-title" title="Buổi biểu diễn âm nhạc trực tiếp">Buổi biểu diễn âm nhạc trực tiếp</div>
+          <div class="streamer-name">JamMaster</div>
+          <div class="viewers" aria-label="1200 người xem">1.2K</div>
+        </div>
+      </div>
+      <div class="stream-card" tabindex="0" role="button" aria-pressed="false" onclick="alert('Đi tới livestream 3')">
+        <div class="stream-thumb" style="background-image: url('https://images.pexels.com/photos/374040/pexels-photo-374040.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260');"></div>
+        <div class="stream-info">
+          <div class="stream-title" title="Nấu ăn cùng đầu bếp Alex">Nấu ăn cùng đầu bếp Alex</div>
+          <div class="streamer-name">ChefAlexTV</div>
+          <div class="viewers" aria-label="890 người xem">890</div>
+        </div>
+      </div>
+      <div class="stream-card" tabindex="0" role="button" aria-pressed="false" onclick="alert('Đi tới livestream 4')">
+        <div class="stream-thumb" style="background-image: url('https://images.pexels.com/photos/574990/pexels-photo-574990.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260');"></div>
+        <div class="stream-info">
+          <div class="stream-title" title="Trò chuyện thân mật với người xem">Trò chuyện thân mật với người xem</div>
+          <div class="streamer-name">FriendlyHost</div>
+          <div class="viewers" aria-label="620 người xem">620</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="categories" aria-label="Duyệt theo thể loại">
+      <h3>Duyệt theo thể loại</h3>
+      <div class="category-list" role="list">
+        <div class="category" role="listitem" tabindex="0" onclick="alert('Duyệt thể loại Game Hành động')">Game Hành động</div>
+        <div class="category" role="listitem" tabindex="0" onclick="alert('Duyệt thể loại Âm nhạc')">Âm nhạc</div>
+        <div class="category" role="listitem" tabindex="0" onclick="alert('Duyệt thể loại Nấu ăn')">Nấu ăn</div>
+        <div class="category" role="listitem" tabindex="0" onclick="alert('Duyệt thể loại Trò chuyện')">Trò chuyện</div>
+        <div class="category" role="listitem" tabindex="0" onclick="alert('Duyệt thể loại Thể thao')">Thể thao</div>
+        <div class="category" role="listitem" tabindex="0" onclick="alert('Duyệt thể loại Giáo dục')">Giáo dục</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2024 LimoTV. Bản quyền thuộc về LimoTV.
+  </footer>
+</body>
+</html>

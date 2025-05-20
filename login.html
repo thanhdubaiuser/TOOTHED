@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Đăng Nhập - LimoTV</title>
+  <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121217;
+      color: #eee;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    #login-page {
+      background: #1f1f2e;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(102,204,255,0.4);
+      max-width: 400px;
+      width: 100%;
+      padding: 2rem 1rem;
+      user-select: none;
+    }
+
+    #login-page h2 {
+      color: #66ccff;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+    }
+
+    #login-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    #login-form label {
+      font-size: 0.95rem;
+      color: #cce7ff;
+      margin-bottom: 0.3rem;
+      user-select: text;
+    }
+
+    #login-form input {
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      background: #282a3a;
+      color: #eee;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    #login-form input:focus {
+      background: #3b3f56;
+      box-shadow: 0 0 5px 2px #66ccff88;
+    }
+
+    #login-form button {
+      padding: 0.75rem 1rem;
+      background: #66ccff;
+      color: #121217;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s;
+    }
+    #login-form button:hover {
+      background: #3399ff;
+    }
+
+    #back-home {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #99d1ff;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.3s;
+    }
+    #back-home:hover {
+      color: #66ccff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <main id="login-page" aria-label="Trang đăng nhập">
+    <h2>Đăng nhập vào LimoTV</h2>
+    <form id="login-form" aria-describedby="login-desc" onsubmit="event.preventDefault(); alert('Bạn đã đăng nhập thành công!');">
+      <label for="username">Tên đăng nhập hoặc email</label>
+      <input type="text" id="username" name="username" autocomplete="username" required aria-required="true" placeholder="Nhập tên đăng nhập hoặc email" />
+      
+      <label for="password">Mật khẩu</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required aria-required="true" placeholder="Nhập mật khẩu" />
+      
+      <button type="submit">Đăng nhập</button>
+    </form>
+    <div id="back-home" tabindex="0" role="button" aria-pressed="false">Quay lại Trang chủ</div>
+  </main>
+
+  <script>
+    const backHomeBtn = document.getElementById('back-home');
+
+    backHomeBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    backHomeBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        backHomeBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>

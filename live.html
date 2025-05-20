@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Stream - LimoTV</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <style>
+        body { background: #121217; color: #eee; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        header { background: #1f1f2e; color: white; padding: 1rem 0; }
+        .video-container { position: relative; width: 100%; max-height: 500px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 1rem; }
+        .video-container video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        main.container { margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+        .left-column { flex: 2 1 600px; min-width: 300px; }
+        .right-column { flex: 1 1 300px; min-width: 280px; background: #1f1f2e; border-radius: 10px; display: flex; flex-direction: column; height: 500px; }
+        .chat-window { flex-grow: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        .chat-message { color: #cce7ff; border-radius: 8px; padding: 0.4rem 0.8rem; background: #282a3a; word-break: break-word; }
+        .chat-input-group { display: flex; padding: 0.5rem 1rem; border-top: 1px solid #333; gap: 0.5rem; }
+        .chat-input-group input { flex-grow: 1; padding: 0.5rem 1rem; border-radius: 12px; border: none; background: #282a3a; color: #eee; font-size: 1rem; }
+        .chat-input-group input::placeholder { color: #999; }
+        .chat-input-group button { padding: 0 1.5rem; border-radius: 12px; border: none; background: #66ccff; color: #121217; font-weight: 700; cursor: pointer; transition: background 0.3s; }
+        .chat-input-group button:hover { background: #3399ff; }
+        @media (max-width: 768px) {
+            main.container { flex-direction: column; }
+            .right-column { height: 300px; }
+            .video-container { max-height: 300px; margin-bottom: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="h4 mb-0">LimoTV</h1>
+            <nav>
+                <a href="index.html" class="text-decoration-none text-white me-3">Trang Chủ</a>
+                <a href="login.html" class="text-decoration-none text-white">Đăng Nhập</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" role="main">
+        <div class="left-column">
+            <h2>Live Stream của <span id="streamer-name">StreamerName</span></h2>
+            <div class="video-container">
+                <video id="live-video" controls autoplay muted>
+                    <source src="assets/videos/sample-live-stream.mp4" type="video/mp4" />
+                    Trình duyệt của bạn không hỗ trợ video.
+                </video>
+            </div>
+        </div>
+
+        <aside class="right-column" aria-label="Phòng chat và gửi tin nhắn">
+            <h5 class="px-3 pt-3">Phòng chat với <span id="streamer-name-2">StreamerName</span></h5>
+            <div id="chat-window" class="chat-window" aria-live="polite" aria-relevant="additions" role="log" tabindex="0" aria-atomic="false">
+                <!-- Tin nhắn chat sẽ hiển thị ở đây -->
+                <div class="chat-message"><strong>Hệ thống:</strong> Chào mừng bạn đến với phòng chat!</div>
+            </div>
+            <form id="chat-form" class="chat-input-group" aria-label="Gửi tin nhắn chat">
+                <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." aria-label="Nhập tin nhắn chat" autocomplete="off" required />
+                <button type="submit" aria-label="Gửi tin nhắn">Gửi</button>
+            </form>
+        </aside>
+    </main>
+
+    <footer class="bg-dark text-center py-3 mt-4" style="color:#555c6b;">
+        &copy; 2024 LimoTV. Bản quyền thuộc về LimoTV.
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cập nhật tên streamer ở cả hai nơi
+            const streamer = "Limo Streamer";
+            document.getElementById('streamer-name').textContent = streamer;
+            document.getElementById('streamer-name-2').textContent = streamer;
+            
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatWindow = document.getElementById('chat-window');
+            
+            // Thêm một số tin nhắn mẫu
+            setTimeout(() => {
+                addMessage("Limo Streamer", "Chào mừng mọi người đến với buổi live stream hôm nay!");
+            }, 2000);
+            
+            // Xử lý gửi tin nhắn
+            chatForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const text = chatInput.value.trim();
+                if (!text) return;
+                
+                // Thêm tin nhắn vào khung chat
+                addMessage("Bạn", text);
+                
+                // Xóa nội dung input và focus lại
+                chatInput.value = '';
+                chatInput.focus();
+                
+                // Giả lập phản hồi từ streamer
+                if (Math.random() > 0.7) {
+                    setTimeout(() => {
+                        addMessage("Limo Streamer", "Cảm ơn bạn đã tham gia chat!");
+                    }, 1500);
+                }
+            });
+            
+            // Hàm thêm tin nhắn vào khung chat
+            function addMessage(sender, text) {
+                const msg = document.createElement('div');
+                msg.classList.add('chat-message');
+                msg.innerHTML = `<strong>${sanitize(sender)}:</strong> ${sanitize(text)}`;
+                chatWindow.appendChild(msg);
+                
+                // Cuộn xuống để hiển thị tin nhắn mới nhất
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+            
+            // Hàm làm sạch văn bản để tránh XSS
+            function sanitize(str) {
+                const tmp = document.createElement('div');
+                tmp.textContent = str;
+                return tmp.innerHTML;
+            }
+        });
+    </script>
+</body>
+</html>

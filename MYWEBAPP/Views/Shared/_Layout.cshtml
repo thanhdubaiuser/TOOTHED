@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - LimoTV</title>
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <div class="logo">LimoTV</div>
+        <nav>
+            <a href="/">Trang chủ</a>
+            <a href="#">Thể loại</a>
+            <a href="#">Streamers Hàng Đầu</a>
+            <a href="#">Giới thiệu</a>
+            <a href="/Account/Login">Đăng nhập</a>
+        </nav>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer>
+        &copy; 2024 LimoTV. Bản quyền thuộc về LimoTV.
+    </footer>
+    
+    <!-- Thêm phần này để render section Scripts -->
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
