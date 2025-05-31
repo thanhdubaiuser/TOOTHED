@@ -1,77 +1,168 @@
 using Microsoft.AspNetCore.Mvc;
-using MYWEBAPP.Models; // Đảm bảo using Models
-using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using MYWEBAPP.Data;
+using MYWEBAPP.Models;
+using System.Diagnostics;
 
 namespace MYWEBAPP.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly ApplicationDbContext _context;
+
+        public HomeController(ApplicationDbContext context)
         {
-            // Tạo dữ liệu mẫu cho featured stream
-            var featuredStream = new FeaturedStreamModel
-            {
-                Title = "Chuyên Gia Game Chơi Hành Động Kịch Tính",
-                Description = "Tham gia cùng hơn 5.400 người xem trực tiếp",
-                ThumbnailUrl = "https://images.pexels.com/photos/1022929/pexels-photo-1022929.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-                // Giả sử featured stream có ID là 0 và tên streamer mặc định hoặc cụ thể
-                StreamUrl = $"/Live/IndexLive?streamId=0&streamerName=FeaturedStreamer", 
-                ViewerCount = 5400
-            };
-
-            // Tạo danh sách các stream thông thường với ID và StreamUrl
-            var streams = new List<StreamModel>
-            {
-                new StreamModel { 
-                    Id = 1, 
-                    Title = "Chiến thuật đỉnh cao", 
-                    StreamerName = "StrategistPro", 
-                    Viewers = 3500, 
-                    ThumbnailUrl = "/images/stream4.jpg",
-                    StreamUrl = $"/Live/IndexLive?streamId=1&streamerName=StrategistPro" 
-                },
-                new StreamModel { 
-                    Id = 2, 
-                    Title = "Buổi biểu diễn âm nhạc trực tiếp", 
-                    StreamerName = "JamMaster", 
-                    Viewers = 1200, 
-                    ThumbnailUrl = "/images/stream3.jpg",
-                    StreamUrl = $"/Live/IndexLive?streamId=2&streamerName=JamMaster"
-                },
-                new StreamModel { 
-                    Id = 3, 
-                    Title = "Nấu ăn cùng đầu bếp Alex", 
-                    StreamerName = "ChefAlexTV", 
-                    Viewers = 890, 
-                    ThumbnailUrl = "/images/stream1.jpg",
-                    StreamUrl = $"/Live/IndexLive?streamId=3&streamerName=ChefAlexTV"
-                },
-                new StreamModel { 
-                    Id = 4, 
-                    Title = "Trò chuyện thân mật với người xem", 
-                    StreamerName = "FriendlyHost", 
-                    Viewers = 620, 
-                    ThumbnailUrl = "/images/stream5.jpg",
-                    StreamUrl = $"/Live/IndexLive?streamId=4&streamerName=FriendlyHost"
-                },
-                new StreamModel { 
-                    Id = 5, 
-                    Title = "Chuyên gia chơi game hành động kịch tính", 
-                    StreamerName = "GameExpert", 
-                    Viewers = 4500, 
-                    ThumbnailUrl = "/images/stream6.jpg",
-                    StreamUrl = $"/Live/IndexLive?streamId=5&streamerName=GameExpert"
-                }
-            };
-
-            // Tạo view model chứa cả featured stream và các streams thông thường
-            var viewModel = new MYWEBAPP.Models.HomeViewModel 
-            {
-                FeaturedStream = featuredStream,
-                Streams = streams
-            };
-
-            return View(viewModel);
+            _context = context;
         }
-    }   
+
+        public async Task<IActionResult> Index()
+        {
+            // Determine current user's viewing permissions
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            
+            // Base query to apply privacy filtering
+            var streamsQuery = _context.LiveStreams
+                .Include(s => s.Streamer)
+                .Include(s => s.Category)
+                .AsQueryable();
+                
+            // Apply privacy filtering
+            if (currentUserId.HasValue)
+            {
+                streamsQuery = streamsQuery.Where(s => 
+                    s.UserId == currentUserId ||
+                    s.Visibility == StreamVisibility.Public ||
+                    (s.Visibility == StreamVisibility.FollowersOnly && s.IsLive));
+            }
+            else
+            {
+                streamsQuery = streamsQuery.Where(s => s.Visibility == StreamVisibility.Public);
+            }
+            
+            // Get featured stream (first one from featured streams)
+            var featuredStream = await streamsQuery
+                .Where(s => s.IsFeatured && s.IsLive)
+                .OrderByDescending(s => s.ViewerCount)
+                .FirstOrDefaultAsync();
+
+            // Get live streams
+            var liveStreams = await streamsQuery
+                .Where(s => s.IsLive)
+                .OrderByDescending(s => s.ViewerCount)
+                .Take(12)
+                .ToListAsync();
+
+            // Get gaming streams
+            var gamingStreams = await streamsQuery
+                .Where(s => s.IsLive && s.CategoryId == 1) // Gaming
+                .OrderByDescending(s => s.ViewerCount)
+                .Take(6)
+                .ToListAsync();
+
+            // Get music streams
+            var musicStreams = await streamsQuery
+                .Where(s => s.IsLive && s.CategoryId == 2) // Music
+                .OrderByDescending(s => s.ViewerCount)
+                .Take(6)
+                .ToListAsync();
+
+            // Get all categories
+            var categories = await _context.Categories.ToListAsync();
+
+            // DEBUG: Kiểm tra dữ liệu
+            Console.WriteLine($"Featured stream: {(featuredStream != null ? featuredStream.Title : "NULL")}");
+            Console.WriteLine($"Live streams count: {liveStreams.Count}");
+            Console.WriteLine($"Gaming streams count: {gamingStreams.Count}");
+            Console.WriteLine($"Music streams count: {musicStreams.Count}");
+            Console.WriteLine($"Categories count: {categories.Count}");
+
+            // Pass data directly to view using ViewBag/ViewData
+            ViewBag.FeaturedStream = featuredStream;
+            ViewBag.LiveStreams = liveStreams;
+            ViewBag.GamingStreams = gamingStreams;
+            ViewBag.MusicStreams = musicStreams;
+            ViewData["Categories"] = categories;
+            
+            // Thêm thông báo success để biết controller đã chạy
+            ViewBag.ControllerMessage = "HomeController Index action đã chạy thành công!";
+
+            return View();
+        }
+
+        // Action to search streams
+        [HttpGet]
+        public async Task<IActionResult> Search(string query, int? categoryId, int page = 1, int pageSize = 12)
+        {
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            
+            var streamsQuery = _context.LiveStreams
+                .Include(s => s.Streamer)
+                .Include(s => s.Category)
+                .AsQueryable();
+
+            // Apply privacy filtering
+            if (currentUserId.HasValue)
+            {
+                streamsQuery = streamsQuery.Where(s => 
+                    s.UserId == currentUserId ||
+                    s.Visibility == StreamVisibility.Public ||
+                    (s.Visibility == StreamVisibility.FollowersOnly && s.IsLive));
+            }
+            else
+            {
+                streamsQuery = streamsQuery.Where(s => s.Visibility == StreamVisibility.Public);
+            }
+
+            // Apply search filters
+            if (!string.IsNullOrEmpty(query))
+            {
+                streamsQuery = streamsQuery.Where(s => 
+                    s.Title.Contains(query) || 
+                    s.Description.Contains(query) || 
+                    s.Streamer.Name.Contains(query));
+                ViewBag.SearchQuery = query;
+            }
+
+            if (categoryId.HasValue)
+            {
+                streamsQuery = streamsQuery.Where(s => s.CategoryId == categoryId);
+                ViewBag.CategoryId = categoryId;
+            }
+
+            // Get total count for pagination
+            var totalStreams = await streamsQuery.CountAsync();
+            
+            // Get paginated results
+            var streams = await streamsQuery
+                .OrderByDescending(s => s.IsLive)
+                .ThenByDescending(s => s.ViewerCount)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Get categories for filter dropdown
+            var categories = await _context.Categories.ToListAsync();
+
+            // Pass data using ViewBag/ViewData
+            ViewBag.Streams = streams;
+            ViewBag.Categories = categories;
+            ViewData["CurrentPage"] = page;
+            ViewData["PageSize"] = pageSize;
+            ViewData["TotalStreams"] = totalStreams;
+            ViewData["TotalPages"] = (int)Math.Ceiling(totalStreams / (double)pageSize);
+
+            return View();
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+    }
 }

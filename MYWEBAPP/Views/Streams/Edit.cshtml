@@ -1,0 +1,343 @@
+@model MYWEBAPP.Models.LiveStream
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Livestream";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit text-warning"></i>
+                        Chỉnh sửa Livestream: @Model.Title
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        <input type="hidden" asp-for="ThumbnailUrl" />
+                        
+                        <!-- Current Thumbnail Preview -->
+                        @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
+                        {
+                            <div class="form-group mb-3">
+                                <label class="form-label">Thumbnail hiện tại:</label>
+                                <div class="text-center">
+                                    <img src="@Model.ThumbnailUrl" alt="Current thumbnail" 
+                                         class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Title -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="form-label">Tiêu đề Stream <span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control form-control-lg" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Row for Category and Streamer -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="CategoryId" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                                    <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId">
+                                        <option value="">-- Chọn danh mục --</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="StreamerId" class="form-label">Streamer <span class="text-danger">*</span></label>
+                                    <select asp-for="StreamerId" class="form-control" asp-items="ViewBag.StreamerId">
+                                        <option value="">-- Chọn streamer --</option>
+                                    </select>
+                                    <span asp-validation-for="StreamerId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- New Thumbnail Upload -->
+                        <div class="form-group mb-3">
+                            <label for="thumbnailFile" class="form-label">Thay đổi Thumbnail (Tùy chọn)</label>
+                            <input type="file" name="thumbnailFile" id="thumbnailFile" class="form-control" accept="image/*" />
+                            <div class="form-text">Chọn hình ảnh mới để thay thế thumbnail hiện tại (JPG, PNG, GIF)</div>
+                        </div>
+
+                        <!-- New Image Preview -->
+                        <div class="form-group mb-3">
+                            <div id="imagePreview" class="text-center" style="display: none;">
+                                <img id="preview" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
+                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removePreview()">
+                                    <i class="fas fa-times"></i> Xóa ảnh mới
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Stream URL -->
+                        <div class="form-group mb-3">
+                            <label asp-for="StreamUrl" class="form-label">URL Stream</label>
+                            <input asp-for="StreamUrl" class="form-control" />
+                            <span asp-validation-for="StreamUrl" class="text-danger"></span>
+                        </div>
+
+                        <!-- Statistics Row -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ViewerCount" class="form-label">Số người xem hiện tại</label>
+                                    <input asp-for="ViewerCount" class="form-control" type="number" min="0" />
+                                    <span asp-validation-for="ViewerCount" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="TotalViews" class="form-label">Tổng lượt xem</label>
+                                    <input asp-for="TotalViews" class="form-control" type="number" min="0" />
+                                    <span asp-validation-for="TotalViews" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Duration (if stream ended) -->
+                        @if (!Model.IsLive && Model.Duration > 0)
+                        {
+                            <div class="form-group mb-3">
+                                <label asp-for="Duration" class="form-label">Thời lượng (phút)</label>
+                                <input asp-for="Duration" class="form-control" type="number" min="0" readonly />
+                                <div class="form-text">Thời lượng stream đã kết thúc (chỉ đọc)</div>
+                            </div>
+                        }
+
+                        <!-- Checkboxes -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input asp-for="IsLive" class="form-check-input" />
+                                    <label asp-for="IsLive" class="form-check-label">
+                                        <i class="fas fa-circle text-danger"></i> Đang Live
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input asp-for="IsFeatured" class="form-check-input" />
+                                    <label asp-for="IsFeatured" class="form-check-label">
+                                        <i class="fas fa-star text-warning"></i> Stream nổi bật
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visibility Settings -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Visibility" class="form-label">Quyền riêng tư</label>
+                            <select asp-for="Visibility" class="form-control" asp-items="Html.GetEnumSelectList<StreamVisibility>()">
+                            </select>
+                            <div class="form-text">
+                                <span class="text-primary"><i class="fas fa-globe"></i> Public:</span> Mọi người đều có thể xem
+                                <br />
+                                <span class="text-primary"><i class="fas fa-users"></i> Followers Only:</span> Chỉ người theo dõi mới xem được
+                                <br />
+                                <span class="text-primary"><i class="fas fa-lock"></i> Private:</span> Chỉ bạn mới xem được
+                            </div>
+                            <span asp-validation-for="Visibility" class="text-danger"></span>
+                        </div>
+
+                        <!-- Timestamps (Read-only info) -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Thông tin Thời gian</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Tạo lúc:</strong><br>
+                                        <span class="text-muted">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                    @if (Model.StartedAt.HasValue)
+                                    {
+                                        <div class="col-md-4">
+                                            <strong>Bắt đầu:</strong><br>
+                                            <span class="text-muted">@Model.StartedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                    }
+                                    @if (Model.EndedAt.HasValue)
+                                    {
+                                        <div class="col-md-4">
+                                            <strong>Kết thúc:</strong><br>
+                                            <span class="text-muted">@Model.EndedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-warning btn-lg me-3">
+                                <i class="fas fa-save"></i> Cập nhật
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info btn-lg me-3">
+                                <i class="fas fa-eye"></i> Xem chi tiết
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Stream Actions Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-play-circle text-success"></i>
+                        Quản lý Stream
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        @if (Model.IsLive)
+                        {
+                            <div class="col-md-6">
+                                <button class="btn btn-danger" onclick="endStream(@Model.Id)">
+                                    <i class="fas fa-stop"></i> Kết thúc Stream
+                                </button>
+                                <div class="text-muted small mt-1">Stream đang live với @Model.ViewerCount người xem</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-6">
+                                <button class="btn btn-success" onclick="startStream(@Model.Id)">
+                                    <i class="fas fa-play"></i> Bắt đầu Stream
+                                </button>
+                                <div class="text-muted small mt-1">Stream hiện đang offline</div>
+                            </div>
+                        }
+                        
+                        <div class="col-md-6">
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger" 
+                               onclick="return confirm('Bạn có chắc muốn xóa stream này?')">
+                                <i class="fas fa-trash"></i> Xóa Stream
+                            </a>
+                            <div class="text-muted small mt-1">Xóa vĩnh viễn stream này</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Image preview functionality
+document.getElementById('thumbnailFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function removePreview() {
+    document.getElementById('thumbnailFile').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('preview').src = '';
+}
+
+// Stream control functions
+function startStream(streamId) {
+    if (confirm('Bạn có muốn bắt đầu stream này?')) {
+        fetch(`/Streams/StartStream/${streamId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra khi bắt đầu stream.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi bắt đầu stream.');
+        });
+    }
+}
+
+function endStream(streamId) {
+    if (confirm('Bạn có muốn kết thúc stream này?')) {
+        fetch(`/Streams/EndStream/${streamId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra khi kết thúc stream.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi kết thúc stream.');
+        });
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const title = document.querySelector('#Title').value.trim();
+    const categoryId = document.querySelector('#CategoryId').value;
+    const streamerId = document.querySelector('#StreamerId').value;
+    
+    if (!title) {
+        alert('Vui lòng nhập tiêu đề stream!');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!categoryId) {
+        alert('Vui lòng chọn danh mục!');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!streamerId) {
+        alert('Vui lòng chọn streamer!');
+        e.preventDefault();
+        return;
+    }
+});
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,21 +1,29 @@
+@model MYWEBAPP.Models.RegisterViewModel
+
 @{
     ViewData["Title"] = "Đăng Ký";
 }
 
 <main id="register-page" aria-label="Trang đăng ký">
     <h2>Đăng ký tài khoản LimoTV</h2>
-    <form id="register-form" aria-describedby="register-desc" onsubmit="event.preventDefault(); alert('Bạn đã đăng ký thành công!');">
-        <label for="username">Tên đăng nhập</label>
-        <input type="text" id="username" name="username" autocomplete="username" required aria-required="true" placeholder="Nhập tên đăng nhập" />
+    <form id="register-form" aria-describedby="register-desc" asp-controller="Account" asp-action="Register" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" autocomplete="email" required aria-required="true" placeholder="Nhập email" />
+        <label asp-for="Username">Tên đăng nhập</label>
+        <input asp-for="Username" autocomplete="username" required aria-required="true" placeholder="Nhập tên đăng nhập" />
+        <span asp-validation-for="Username" class="text-danger"></span>
         
-        <label for="password">Mật khẩu</label>
-        <input type="password" id="password" name="password" autocomplete="new-password" required aria-required="true" placeholder="Nhập mật khẩu" />
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" autocomplete="email" required aria-required="true" placeholder="Nhập email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
         
-        <label for="confirm-password">Xác nhận mật khẩu</label>
-        <input type="password" id="confirm-password" name="confirm-password" autocomplete="new-password" required aria-required="true" placeholder="Nhập lại mật khẩu" />
+        <label asp-for="Password">Mật khẩu</label>
+        <input asp-for="Password" autocomplete="new-password" required aria-required="true" placeholder="Nhập mật khẩu" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+        
+        <label asp-for="ConfirmPassword">Xác nhận mật khẩu</label>
+        <input asp-for="ConfirmPassword" autocomplete="new-password" required aria-required="true" placeholder="Nhập lại mật khẩu" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
         
         <button type="submit">Đăng ký</button>
     </form>

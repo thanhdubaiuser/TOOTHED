@@ -1,15 +1,34 @@
+@model MYWEBAPP.Models.LoginViewModel
+
 @{
     ViewData["Title"] = "Đăng Nhập";
 }
 
 <main id="login-page" aria-label="Trang đăng nhập">
     <h2>Đăng nhập vào LimoTV</h2>
-    <form id="login-form" aria-describedby="login-desc" onsubmit="event.preventDefault(); alert('Bạn đã đăng nhập thành công!');">
-        <label for="username">Tên đăng nhập hoặc email</label>
-        <input type="text" id="username" name="username" autocomplete="username" required aria-required="true" placeholder="Nhập tên đăng nhập hoặc email" />
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    
+    <form id="login-form" aria-describedby="login-desc" asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         
-        <label for="password">Mật khẩu</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required aria-required="true" placeholder="Nhập mật khẩu" />
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" autocomplete="email" required aria-required="true" placeholder="Nhập email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+        
+        <label asp-for="Password">Mật khẩu</label>
+        <input asp-for="Password" autocomplete="current-password" required aria-required="true" placeholder="Nhập mật khẩu" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+        
+        <div class="remember-me">
+            <input asp-for="RememberMe" />
+            <label asp-for="RememberMe">Ghi nhớ đăng nhập</label>
+        </div>
         
         <button type="submit">Đăng nhập</button>
     </form>

@@ -1,0 +1,29 @@
+@using MYWEBAPP.Models
+
+<h1>Test Page - Direct Data Passing</h1>
+
+<div class="alert alert-info">
+    <h4>ViewBag Messages:</h4>
+    <p>Message: @ViewBag.Message</p>
+    <p>Test Message: @ViewData["TestMessage"]</p>
+    <p>Stream Count: @ViewBag.StreamCount</p>
+    <p>Category Count: @ViewBag.CategoryCount</p>
+</div>
+
+@if (ViewBag.FirstStream != null)
+{
+    var stream = ViewBag.FirstStream as LiveStream;
+    <div class="alert alert-success">
+        <h4>First Stream Found:</h4>
+        <p>Title: @stream.Title</p>
+        <p>Streamer: @stream.Streamer?.Name</p>
+        <p>Category: @stream.Category?.Name</p>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <h4>No Streams Found</h4>
+        <p>Database may be empty</p>
+    </div>
+}

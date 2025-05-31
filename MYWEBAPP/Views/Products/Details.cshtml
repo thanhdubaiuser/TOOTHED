@@ -1,0 +1,162 @@
+@model MYWEBAPP.Models.Product
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Danh sách sản phẩm</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Chi tiết</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Hình ảnh sản phẩm</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="@(Model.ImageUrl ?? "/images/default-product.jpg")" 
+                         alt="@Model.Name" 
+                         class="img-fluid rounded shadow"
+                         style="max-height: 400px; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">@Html.DisplayFor(model => model.Name)</h4>
+                    <div>
+                        @if (Model.IsFeatured)
+                        {
+                            <span class="badge bg-warning text-dark">Nổi bật</span>
+                        }
+                        @if (Model.IsOnSale)
+                        {
+                            <span class="badge bg-danger">Khuyến mãi</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-4"><strong>Danh mục:</strong></div>
+                        <div class="col-8">@Html.DisplayFor(model => model.Category.Name)</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4"><strong>Giá:</strong></div>
+                        <div class="col-8">
+                            @if (Model.IsOnSale && Model.DiscountPrice.HasValue)
+                            {
+                                <span class="text-decoration-line-through text-muted me-2">@Model.Price.ToString("N0") VNĐ</span>
+                                <span class="text-danger fw-bold fs-5">@Model.DiscountPrice.Value.ToString("N0") VNĐ</span>
+                                <span class="badge bg-success ms-2">
+                                    Giảm @(((Model.Price - Model.DiscountPrice.Value) / Model.Price * 100).ToString("F0"))%
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="fw-bold fs-5 text-primary">@Model.Price.ToString("N0") VNĐ</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4"><strong>Tồn kho:</strong></div>
+                        <div class="col-8">
+                            <span class="badge @(Model.Stock > 10 ? "bg-success" : Model.Stock > 0 ? "bg-warning text-dark" : "bg-danger") fs-6">
+                                @Model.Stock sản phẩm
+                            </span>
+                            @if (Model.Stock == 0)
+                            {
+                                <span class="text-danger ms-2">Hết hàng</span>
+                            }
+                            else if (Model.Stock <= 5)
+                            {
+                                <span class="text-warning ms-2">Sắp hết hàng</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4"><strong>Lượt xem:</strong></div>
+                        <div class="col-8">@Html.DisplayFor(model => model.ViewCount) lượt</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4"><strong>Đã bán:</strong></div>
+                        <div class="col-8">@Html.DisplayFor(model => model.SoldCount) sản phẩm</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4"><strong>Ngày tạo:</strong></div>
+                        <div class="col-8">@Html.DisplayFor(model => model.CreatedAt)</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Mô tả:</strong>
+                                <p class="mt-2">@Html.DisplayFor(model => model.Description)</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Thống kê</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h5 class="text-primary mb-0">@Model.ViewCount</h5>
+                                <small class="text-muted">Lượt xem</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h5 class="text-success mb-0">@Model.SoldCount</h5>
+                                <small class="text-muted">Đã bán</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="text-info mb-0">@((Model.SoldCount > 0 ? (double)Model.ViewCount / Model.SoldCount : 0).ToString("F1"))</h5>
+                            <small class="text-muted">Tỷ lệ chuyển đổi</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Xóa sản phẩm
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

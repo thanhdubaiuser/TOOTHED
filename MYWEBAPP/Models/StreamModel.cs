@@ -7,6 +7,6 @@ namespace MYWEBAPP.Models
         public string StreamerName { get; set; } = string.Empty;
         public int Viewers { get; set; }
         public string ThumbnailUrl { get; set; } = string.Empty;
-        public string StreamUrl { get; set; } // Thêm thuộc tính này
+        public string StreamUrl { get; set; } = string.Empty; // Thêm thuộc tính này
     }
 }

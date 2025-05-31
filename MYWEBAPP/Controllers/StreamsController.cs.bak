@@ -1,0 +1,380 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using MYWEBAPP.Data;
+using MYWEBAPP.Models;
+
+namespace MYWEBAPP.Controllers
+{
+    public class StreamsController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public StreamsController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        {
+            _context = context;
+            _webHostEnvironment = webHostEnvironment;
+        }        // GET: Streams
+        public async Task<IActionResult> Index(int? categoryId, int? userId, string status = "all", int page = 1, int pageSize = 10)
+        {
+            IQueryable<LiveStream> streamsQuery = _context.LiveStreams
+                .Include(s => s.Streamer)
+                .Include(s => s.Category)
+                .Include(s => s.User);
+
+            // Lọc theo category
+            if (categoryId.HasValue)
+            {
+                streamsQuery = streamsQuery.Where(s => s.CategoryId == categoryId.Value);
+            }
+            
+            // Lọc theo người dùng
+            if (userId.HasValue)
+            {
+                streamsQuery = streamsQuery.Where(s => s.UserId == userId.Value);
+                // Nếu đang xem stream của người khác và người đó không trùng với người đăng nhập hiện tại
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                if (currentUserId != userId)
+                {
+                    // Chỉ hiển thị các stream công khai hoặc đang live
+                    streamsQuery = streamsQuery.Where(s => s.Visibility == StreamVisibility.Public || (s.IsLive && s.IsFeatured));
+                }
+            }
+            else
+            {
+                // Khi không xem theo user cụ thể, lọc theo quyền truy cập
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                
+                if (currentUserId.HasValue)
+                {
+                    // Người dùng đã đăng nhập có thể xem:
+                    // 1. Tất cả các stream của chính họ
+                    // 2. Các stream Public của người khác
+                    // 3. Các stream Followers Only của những người họ follow (hiện tại chưa có chức năng follow)
+                    streamsQuery = streamsQuery.Where(s => 
+                        s.UserId == currentUserId ||
+                        s.Visibility == StreamVisibility.Public ||
+                        (s.Visibility == StreamVisibility.FollowersOnly && s.IsLive));
+                }
+                else
+                {
+                    // Người dùng chưa đăng nhập chỉ có thể xem stream Public
+                    streamsQuery = streamsQuery.Where(s => s.Visibility == StreamVisibility.Public);
+                }
+            }
+
+            // Lọc theo trạng thái
+            switch (status)
+            {
+                case "live":
+                    streamsQuery = streamsQuery.Where(s => s.IsLive);
+                    break;
+                case "offline":
+                    streamsQuery = streamsQuery.Where(s => !s.IsLive);
+                    break;
+                case "featured":
+                    streamsQuery = streamsQuery.Where(s => s.IsFeatured);
+                    break;
+                default:
+                    // Tất cả streams
+                    break;
+            }
+
+            var totalCount = await streamsQuery.CountAsync();
+            var streams = await streamsQuery
+                .OrderByDescending(s => s.IsLive)
+                .ThenByDescending(s => s.ViewerCount)
+                .ThenByDescending(s => s.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.Categories = await _context.Categories.ToListAsync();
+            ViewBag.CategoryId = categoryId;
+            ViewBag.Status = status;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return View(streams);
+        }
+
+        // GET: Streams/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var stream = await _context.LiveStreams
+                .Include(s => s.Category)
+                .Include(s => s.Streamer)
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (stream == null)
+            {
+                return NotFound();
+            }
+            
+            // Kiểm tra quyền truy cập dựa trên visibility
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            bool hasAccess = false;
+            
+            // Trường hợp 1: Stream của chính người dùng
+            if (currentUserId.HasValue && stream.UserId == currentUserId)
+            {
+                hasAccess = true;
+            }
+            // Trường hợp 2: Stream Public - ai cũng xem được
+            else if (stream.Visibility == StreamVisibility.Public)
+            {
+                hasAccess = true;
+            }
+            // Trường hợp 3: Stream Followers Only - người theo dõi mới xem được
+            else if (stream.Visibility == StreamVisibility.FollowersOnly && currentUserId.HasValue)
+            {
+                // TODO: Implement follower check when following feature is added
+                // For now, we'll allow any logged-in user to view Followers Only streams
+                hasAccess = true;
+            }
+            
+            if (!hasAccess)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền xem stream này.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Tăng view count
+            stream.TotalViews++;
+            if (stream.IsLive)
+            {
+                stream.ViewerCount++;
+            }
+            await _context.SaveChangesAsync();
+
+            return View(stream);
+        }
+
+        // GET: Streams/Create
+        public IActionResult Create()
+        {
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name");
+            ViewData["StreamerId"] = new SelectList(_context.Streamers, "Id", "Name");
+            return View();
+        }
+
+        // POST: Streams/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Title,Description,ViewerCount,IsLive,IsFeatured,StreamerId,CategoryId")] LiveStream stream, IFormFile? thumbnailFile)
+        {
+            if (ModelState.IsValid)
+            {
+                // Xử lý upload ảnh thumbnail
+                if (thumbnailFile != null && thumbnailFile.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "streams");
+                    Directory.CreateDirectory(uploadsFolder);
+                    
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + thumbnailFile.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await thumbnailFile.CopyToAsync(fileStream);
+                    }
+                    
+                    stream.ThumbnailUrl = "/images/streams/" + uniqueFileName;
+                }                stream.CreatedAt = DateTime.Now;
+                if (stream.IsLive)
+                {
+                    stream.StartedAt = DateTime.Now;
+                }
+                
+                // Liên kết với người dùng đăng nhập nếu có
+                var userId = HttpContext.Session.GetInt32("UserId");
+                if (userId.HasValue)
+                {
+                    stream.UserId = userId.Value;
+                }
+
+                _context.Add(stream);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", stream.CategoryId);
+            ViewData["StreamerId"] = new SelectList(_context.Streamers, "Id", "Name", stream.StreamerId);
+            return View(stream);
+        }
+
+        // GET: Streams/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var stream = await _context.LiveStreams.FindAsync(id);
+            if (stream == null)
+            {
+                return NotFound();
+            }
+            
+            // Kiểm tra quyền sở hữu - chỉ chủ sở hữu stream mới được chỉnh sửa
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (!currentUserId.HasValue || stream.UserId != currentUserId)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền chỉnh sửa stream này.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", stream.CategoryId);
+            ViewData["StreamerId"] = new SelectList(_context.Streamers, "Id", "Name", stream.StreamerId);
+            return View(stream);
+        }
+
+        // POST: Streams/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,ThumbnailUrl,StreamUrl,ViewerCount,TotalViews,IsLive,IsFeatured,CreatedAt,StartedAt,EndedAt,Duration,StreamerId,CategoryId,Visibility")] LiveStream stream, IFormFile? thumbnailFile)
+        {
+            if (id != stream.Id)
+            {
+                return NotFound();
+            }
+            
+            // Kiểm tra quyền sở hữu - chỉ chủ sở hữu stream mới được chỉnh sửa
+            var existingStream = await _context.LiveStreams.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            if (existingStream == null)
+            {
+                return NotFound();
+            }
+            
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (!currentUserId.HasValue || existingStream.UserId != currentUserId)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền chỉnh sửa stream này.";
+                return RedirectToAction(nameof(Index));
+            }
+            
+            // Đảm bảo không mất UserId sau khi cập nhật
+            stream.UserId = currentUserId;
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Lấy stream cũ để so sánh trạng thái
+                    var oldStream = await _context.LiveStreams.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+                    
+                    // Xử lý upload ảnh mới
+                    if (thumbnailFile != null && thumbnailFile.Length > 0)
+                    {
+                        // Xóa ảnh cũ nếu có
+                        if (!string.IsNullOrEmpty(stream.ThumbnailUrl))
+                        {
+                            var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, stream.ThumbnailUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldImagePath))
+                            {
+                                System.IO.File.Delete(oldImagePath);
+                            }
+                        }
+
+                        var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "streams");
+                        Directory.CreateDirectory(uploadsFolder);
+                        
+                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + thumbnailFile.FileName;
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await thumbnailFile.CopyToAsync(fileStream);
+                        }
+                        
+                        stream.ThumbnailUrl = "/images/streams/" + uniqueFileName;
+                    }
+
+                    // Xử lý thay đổi trạng thái live
+                    if (oldStream != null)
+                    {
+                        if (!oldStream.IsLive && stream.IsLive) // Bắt đầu live
+                        {
+                            stream.StartedAt = DateTime.Now;
+                            stream.EndedAt = null;
+                            stream.ViewerCount = 0; // Reset viewer count khi bắt đầu live mới
+                        }
+                        else if (oldStream.IsLive && !stream.IsLive) // Kết thúc live
+                        {
+                            stream.EndedAt = DateTime.Now;
+                            if (stream.StartedAt.HasValue)
+                            {
+                                stream.Duration = (int)(DateTime.Now - stream.StartedAt.Value).TotalMinutes;
+                            }
+                            stream.ViewerCount = 0; // Reset viewer count khi kết thúc
+                        }
+                    }
+
+                    _context.Update(stream);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!StreamExists(stream.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", stream.CategoryId);
+            ViewData["StreamerId"] = new SelectList(_context.Streamers, "Id", "Name", stream.StreamerId);
+            return View(stream);
+        }
+
+        // GET: Streams/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var stream = await _context.LiveStreams
+                .Include(s => s.Category)
+                .Include(s => s.Streamer)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (stream == null)
+            {
+                return NotFound();
+            }
+
+            // Kiểm tra quyền sở hữu - chỉ chủ sở hữu stream mới được xóa
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (!currentUserId.HasValue || stream.UserId != currentUserId)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền xóa stream này.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(stream);
+        }
+
+        // POST: Streams/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var stream = await _context.LiveStreams.FindAsync(id);
+            if

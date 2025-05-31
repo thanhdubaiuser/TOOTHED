@@ -1,0 +1,275 @@
+@model MYWEBAPP.Models.LiveStream
+
+@{
+    ViewData["Title"] = "Xóa Livestream";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Xác nhận xóa Livestream
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning"></i>
+                        <strong>Cảnh báo:</strong> Bạn có chắc chắn muốn xóa livestream này? Hành động này không thể hoàn tác!
+                    </div>
+
+                    <!-- Stream Info Display -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
+                            {
+                                <img src="@Model.ThumbnailUrl" alt="@Model.Title" 
+                                     class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <img src="/images/no-image.png" alt="No thumbnail" 
+                                     class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <h3 class="mb-3">@Model.Title</h3>
+                            
+                            <div class="mb-2">
+                                <span class="badge badge-primary">@Model.Category.Name</span>
+                                @if (Model.IsFeatured)
+                                {
+                                    <span class="badge badge-warning ml-1">
+                                        <i class="fas fa-star"></i> Nổi bật
+                                    </span>
+                                }
+                                @if (Model.IsLive)
+                                {
+                                    <span class="badge badge-danger ml-1">
+                                        <i class="fas fa-circle"></i> LIVE
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary ml-1">OFFLINE</span>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="text-muted">
+                                    @(Model.Description.Length > 150 ? Model.Description.Substring(0, 150) + "..." : Model.Description)
+                                </p>
+                            }
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Streamer:</strong><br>
+                                    <span class="text-muted">@Model.Streamer.Name</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Tạo lúc:</strong><br>
+                                    <span class="text-muted">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Thống kê sẽ bị mất</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <h5 class="text-primary">@Model.TotalViews.ToString("N0")</h5>
+                                    <small class="text-muted">Tổng lượt xem</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <h5 class="text-success">@Model.ViewerCount.ToString("N0")</h5>
+                                    <small class="text-muted">Đang xem</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <h5 class="text-info">
+                                        @(Model.Duration > 0 ? TimeSpan.FromMinutes(Model.Duration).ToString(@"hh\:mm") : "--:--")
+                                    </h5>
+                                    <small class="text-muted">Thời lượng</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <h5 class="@(Model.IsLive ? "text-danger" : "text-secondary")">
+                                        @(Model.IsLive ? "LIVE" : "OFFLINE")
+                                    </h5>
+                                    <small class="text-muted">Trạng thái</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warning for Live Streams -->
+                    @if (Model.IsLive)
+                    {
+                        <div class="alert alert-danger mt-3">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <strong>Chú ý:</strong> Stream này đang LIVE với @Model.ViewerCount người xem. 
+                            Việc xóa sẽ ngắt kết nối tất cả người xem!
+                        </div>
+                    }
+
+                    <!-- Timeline Info -->
+                    @if (Model.StartedAt.HasValue || Model.EndedAt.HasValue)
+                    {
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Lịch sử Stream</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    @if (Model.StartedAt.HasValue)
+                                    {
+                                        <div class="col-md-6">
+                                            <strong>Bắt đầu:</strong><br>
+                                            <span class="text-muted">@Model.StartedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                    }
+                                    @if (Model.EndedAt.HasValue)
+                                    {
+                                        <div class="col-md-6">
+                                            <strong>Kết thúc:</strong><br>
+                                            <span class="text-muted">@Model.EndedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Confirmation Form -->
+                    <form asp-action="Delete" method="post" class="mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                            <label class="form-check-label" for="confirmDelete">
+                                Tôi hiểu rằng việc xóa này không thể hoàn tác và đồng ý xóa livestream này
+                            </label>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-danger btn-lg me-3" id="deleteButton" disabled>
+                                <i class="fas fa-trash"></i> Xác nhận xóa
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info btn-lg me-3">
+                                <i class="fas fa-eye"></i> Xem lại chi tiết
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Hủy bỏ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alternative Actions Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Các lựa chọn khác
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Thay vì xóa, bạn có thể:</p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Chỉnh sửa thông tin
+                        </a>
+                        
+                        @if (Model.IsLive)
+                        {
+                            <button class="btn btn-secondary" onclick="endStream(@Model.Id)">
+                                <i class="fas fa-stop"></i> Kết thúc stream thay vì xóa
+                            </button>
+                        }
+                        
+                        @if (Model.IsFeatured)
+                        {
+                            <button class="btn btn-outline-warning" onclick="toggleFeatured(@Model.Id)">
+                                <i class="fas fa-star"></i> Bỏ nổi bật
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enable delete button only when checkbox is checked
+document.getElementById('confirmDelete').addEventListener('change', function() {
+    document.getElementById('deleteButton').disabled = !this.checked;
+});
+
+// Stream control functions
+function endStream(streamId) {
+    if (confirm('Kết thúc stream này thay vì xóa?')) {
+        fetch(`/Streams/EndStream/${streamId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = `/Streams/Details/${streamId}`;
+            } else {
+                alert('Có lỗi xảy ra khi kết thúc stream.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi kết thúc stream.');
+        });
+    }
+}
+
+function toggleFeatured(streamId) {
+    if (confirm('Bỏ đánh dấu nổi bật cho stream này?')) {
+        fetch(`/Streams/ToggleFeatured/${streamId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra khi cập nhật.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi cập nhật.');
+        });
+    }
+}
+
+// Prevent accidental form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (!document.getElementById('confirmDelete').checked) {
+        e.preventDefault();
+        alert('Vui lòng xác nhận bằng cách check vào ô xác nhận!');
+        return;
+    }
+    
+    if (!confirm('Bạn có THỰC SỰ muốn xóa livestream này? Hành động này không thể hoàn tác!')) {
+        e.preventDefault();
+    }
+});
+</script>

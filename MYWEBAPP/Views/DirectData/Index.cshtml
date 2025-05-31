@@ -1,0 +1,94 @@
+@{
+    ViewData["Title"] = "Direct Data Example";
+}
+
+<div class="container">
+    <h1 class="mb-4">Direct Data Passing Example</h1>
+    <p class="lead">This page demonstrates passing data directly to the view using ViewBag, ViewData, and TempData instead of strongly-typed models.</p>
+
+    <!-- Featured Stream Section using ViewBag -->
+    @if (ViewBag.FeaturedStream != null)
+    {
+        <section class="featured-stream mb-5">
+            <h2 class="mb-3">Featured Stream (via ViewBag)</h2>
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <h3 class="card-title">@ViewBag.FeaturedStream.Title</h3>
+                    <p class="card-text">
+                        <strong>Streamer:</strong> @ViewBag.FeaturedStream.Streamer.Name<br>
+                        <strong>Category:</strong> @ViewBag.FeaturedStream.Category.Name<br>
+                        <strong>Viewers:</strong> @ViewBag.FeaturedStream.ViewerCount<br>
+                        <strong>Description:</strong> @ViewBag.FeaturedStream.Description
+                    </p>
+                    <span class="badge bg-success">Live</span>
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- Live Streams Section using ViewBag -->
+    @if (ViewBag.LiveStreams != null)
+    {
+        <section class="live-streams mb-5">
+            <h2 class="mb-3">Live Streams (via ViewBag)</h2>
+            <div class="row">
+                @foreach (var stream in ViewBag.LiveStreams)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">@stream.Title</h5>
+                                <p class="card-text">
+                                    <small class="text-muted">@stream.Streamer.Name</small><br>
+                                    <span class="badge bg-primary">@stream.Category.Name</span>
+                                    <span class="badge bg-info">@stream.ViewerCount viewers</span>
+                                </p>
+                                <a href="@Url.Action("Details", "Streams", new { id = stream.Id })" class="btn btn-primary btn-sm">Watch</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <!-- Categories Section using ViewData -->
+    @if (ViewData["Categories"] != null)
+    {
+        <section class="categories mb-5">
+            <h2 class="mb-3">Categories (via ViewData)</h2>
+            <div class="row">
+                @foreach (var category in (List<MYWEBAPP.Models.Category>)ViewData["Categories"])
+                {
+                    <div class="col-md-3 mb-2">
+                        <span class="badge bg-secondary p-2">@category.Name</span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <!-- Message Section using TempData -->
+    @if (TempData["Message"] != null)
+    {
+        <section class="message mb-5">
+            <h2 class="mb-3">Temporary Message (via TempData)</h2>
+            <div class="alert alert-info">
+                @TempData["Message"]
+            </div>
+        </section>
+    }
+
+    <!-- Data Source Information -->
+    <section class="data-info">
+        <h2 class="mb-3">Data Source Information</h2>
+        <div class="alert alert-warning">
+            <h5>Direct Data Passing Methods Used:</h5>
+            <ul class="mb-0">
+                <li><strong>ViewBag:</strong> Dynamic properties for FeaturedStream and LiveStreams</li>
+                <li><strong>ViewData:</strong> Dictionary-based approach for Categories</li>
+                <li><strong>TempData:</strong> Session-based storage for temporary messages</li>
+            </ul>
+        </div>
+    </section>
+</div>

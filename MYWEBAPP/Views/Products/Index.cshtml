@@ -1,0 +1,202 @@
+@model IEnumerable<MYWEBAPP.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>@ViewData["Title"]</h2>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Thêm sản phẩm mới
+                </a>
+            </div>
+
+            <!-- Filter by Category -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="categoryId" class="form-label">Lọc theo danh mục:</label>
+                            <select name="categoryId" id="categoryId" class="form-select">
+                                <option value="">Tất cả danh mục</option>                                @foreach (var category in ViewBag.Categories)
+                                {
+                                    if (ViewBag.CategoryId != null && ViewBag.CategoryId.Equals(category.Id))
+                                    {
+                                        <option value="@category.Id" selected="selected">@category.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@category.Id">@category.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-outline-primary d-block">Lọc</button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-end">
+                                <small class="text-muted">
+                                    Tổng: @ViewBag.TotalCount sản phẩm
+                                </small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products Table with DataTables -->
+            <div class="card">
+                <div class="card-body">
+                    <table id="productsTable" class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Hình ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Giá</th>
+                                <th>Kho</th>
+                                <th>Lượt xem</th>
+                                <th>Đã bán</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <img src="@(item.ImageUrl ?? "/images/default-product.jpg")" 
+                                             alt="@item.Name" 
+                                             style="width: 50px; height: 50px; object-fit: cover;" 
+                                             class="rounded">
+                                    </td>
+                                    <td>
+                                        <strong>@Html.DisplayFor(modelItem => item.Name)</strong>
+                                        @if (item.IsFeatured)
+                                        {
+                                            <span class="badge bg-warning text-dark ms-1">Nổi bật</span>
+                                        }
+                                    </td>
+                                    <td>@Html.DisplayFor(modelItem => item.Category.Name)</td>
+                                    <td>
+                                        @if (item.IsOnSale && item.DiscountPrice.HasValue)
+                                        {
+                                            <span class="text-decoration-line-through text-muted">@item.Price.ToString("N0") VNĐ</span><br>
+                                            <span class="text-danger fw-bold">@item.DiscountPrice.Value.ToString("N0") VNĐ</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold">@item.Price.ToString("N0") VNĐ</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @(item.Stock > 10 ? "bg-success" : item.Stock > 0 ? "bg-warning" : "bg-danger")">
+                                            @item.Stock
+                                        </span>
+                                    </td>
+                                    <td>@Html.DisplayFor(modelItem => item.ViewCount)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.SoldCount)</td>
+                                    <td>
+                                        @if (item.IsOnSale)
+                                        {
+                                            <span class="badge bg-danger">Khuyến mãi</span>
+                                        }
+                                        @if (item.Stock == 0)
+                                        {
+                                            <span class="badge bg-secondary">Hết hàng</span>
+                                        }
+                                        else if (item.Stock <= 5)
+                                        {
+                                            <span class="badge bg-warning text-dark">Sắp hết</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav aria-label="Product pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        @if (ViewBag.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page - 1)" asp-route-categoryId="@ViewBag.CategoryId">Trước</a>
+                            </li>
+                        }
+
+                        @for (int i = Math.Max(1, ViewBag.Page - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.Page + 2); i++)
+                        {
+                            <li class="page-item @(i == ViewBag.Page ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-categoryId="@ViewBag.CategoryId">@i</a>
+                            </li>
+                        }
+
+                        @if (ViewBag.Page < ViewBag.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page + 1)" asp-route-categoryId="@ViewBag.CategoryId">Sau</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- DataTables CSS and JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#productsTable').DataTable({
+                "language": {
+                    "lengthMenu": "Hiển thị _MENU_ sản phẩm",
+                    "zeroRecords": "Không tìm thấy sản phẩm nào",
+                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ sản phẩm",
+                    "infoEmpty": "Hiển thị 0 đến 0 của 0 sản phẩm",
+                    "infoFiltered": "(lọc từ _MAX_ tổng số sản phẩm)",
+                    "search": "Tìm kiếm:",
+                    "paginate": {
+                        "first": "Đầu",
+                        "last": "Cuối",
+                        "next": "Sau",
+                        "previous": "Trước"
+                    }
+                },
+                "pageLength": 10,
+                "order": [[ 0, "desc" ]],
+                "columnDefs": [
+                    { "orderable": false, "targets": [0, 8] } // Disable sorting for image and actions columns
+                ]
+            });
+        });
+    </script>
+}

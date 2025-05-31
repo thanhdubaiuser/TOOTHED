@@ -227,7 +227,31 @@ main {
     background-position: center;
     background-size: cover;
     flex-shrink: 0;
+    position: relative; /* Thêm vị trí tương đối để các badge nằm đúng vị trí */
 }
+
+.live-badge, .viewer-count, .visibility-badge {
+    position: absolute;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 2;
+}
+
+.live-badge {
+    top: 10px;
+    left: 10px;
+    background: #dc3545;
+    color: white;
+}
+
+.viewer-count {
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+}
+
 .stream-info {
     padding: 0.8rem 1rem;
     flex-grow: 1;
@@ -290,6 +314,30 @@ main {
 .category:hover {
     background: #66ccff;
     color: #121217;
+}
+
+/* Visibility badges */
+.visibility-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 2;
+}
+
+.featured-visibility {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
 }
 
 /* Scrollbar for category list */
@@ -706,7 +754,7 @@ main.container[role="main"] { /* Đảm bảo selector này đúng với HTML c�
     border-bottom-right-radius: 10px;
 }
 
-/* Live Stream Page Layout - Cải thiện giao diện */
+/* Live Stream Page Layout - Improved Interface */
 main.container[role="main"] {
     display: flex;
     gap: 1.5rem;
@@ -883,222 +931,95 @@ main.container[role="main"] {
     background-color: #3399ff;
 }
 
-/* Utility Classes (Nếu bạn chưa có hoặc không dùng framework nào cung cấp) */
-.px-3 {
-    padding-left: 1rem !important; /* !important nếu cần ghi đè */
-    padding-right: 1rem !important;
-}
-
-.pt-3 {
-    padding-top: 1rem !important;
-}
-
-/* General Layout for Live Page */
-main.container[role="main"] {
+/* User menu styles */
+.user-menu {
     display: flex;
-    gap: 1.5rem;
-    align-items: stretch; 
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
-    max-width: 1600px; 
-    margin: 0 auto;
+    align-items: center;
 }
 
-/* Left Column (Video and Stream Info) */
-.left-column {
-    flex: 4; 
+.navbar-nav {
     display: flex;
-    flex-direction: column;
-    gap: 1rem; 
-}
-
-.stream-header-info {
-    padding: 0.75rem 1rem; /* Tăng padding một chút */
-    background-color: #1a1a2e; 
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    flex-shrink: 0;
-}
-
-.live-stream-page-title {
-    font-size: 1.75rem; 
-    color: #e0e0e0;
-    margin: 0; /* Bỏ margin nếu dùng gap trong .left-column */
-    font-weight: 600;
-    line-height: 1.3;
-}
-
-.live-stream-details { 
-    font-size: 0.9rem;
-    color: #a0a8b3;
-    margin-top: 0.35rem;
-}
-
-.video-container {
-    width: 100%;
-    background: #000;
-    border-radius: 10px; 
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
-    flex-grow: 1; 
-    display: flex; 
-    min-height: 300px; 
-}
-
-#live-video {
-    display: block;
-    width: 100%;
-    height: 100%; 
-    object-fit: contain; 
-    border-radius: 10px; 
-    outline: none;
-}
-
-.stream-description-box {
-    background-color: #1a1a2e;
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
-    color: #cce7ff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    flex-shrink: 0;
-}
-
-.stream-description-box h3 {
-    font-size: 1.2rem;
-    color: #66ccff;
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-}
-
-.stream-description-box p {
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin-bottom: 0;
-}
-
-/* Right Column (Chat) */
-.right-column {
-    flex: 1; 
-    min-width: 320px; 
-    max-width: 400px; 
-    background: #1f1f2e;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    max-height: calc(85vh - 2rem); /* Điều chỉnh cho phù hợp với chiều cao tổng thể */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-/* Chat Panel Title - Áp dụng class .chat-panel-title cho thẻ h5 nếu muốn style riêng biệt */
-/* Hoặc style trực tiếp thẻ h5 nếu không muốn thêm class */
-.right-column > h5 { /* Style cho thẻ h5 trực tiếp trong .right-column */
-    color: #e0e0e0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    /* padding đã được xử lý bởi px-3, pt-3 nếu bạn dùng chúng */
-    /* Nếu không dùng px-3, pt-3, bạn có thể thêm padding ở đây: */
-    /* padding: 0.9rem 1rem; */ 
+    list-style: none;
+    padding: 0;
     margin: 0;
-    border-bottom: 1px solid #383a4a; 
-    background-color: #2a2c3d; 
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
 }
 
-.chat-window {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
+.nav-item {
+    position: relative;
+    margin-left: 10px;
 }
 
-.chat-message {
-    color: #ddeeff; 
-    border-radius: 8px;
-    padding: 0.5rem 0.9rem; 
-    background: #2c2e40; 
-    word-break: break-word;
-    line-height: 1.4;
-}
-
-.chat-message strong {
-    color: #66ccff; 
-}
-
-.chat-input-group {
-    display: flex;
-    padding: 0.85rem 1rem;
-    border-top: 1px solid #383a4a;
-    gap: 0.75rem; /* Tăng gap */
-    background-color: #2a2c3d; /* Nền cho input group */
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-.chat-input-group input {
-    flex-grow: 1;
-    padding: 0.6rem 1rem; /* Điều chỉnh padding input */
-    border-radius: 20px; /* Bo tròn nhiều hơn */
-    border: 1px solid #4a4c5d; /* Thêm viền nhẹ */
-    background: #1f1f2e; /* Nền input */
+.nav-link {
     color: #eee;
-    font-size: 0.95rem;
-    outline: none;
-}
-.chat-input-group input:focus {
-    border-color: #66ccff;
-    box-shadow: 0 0 0 2px rgba(102, 204, 255, 0.2);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
-.chat-input-group button {
-    padding: 0.6rem 1.5rem; /* Điều chỉnh padding button */
-    border-radius: 20px; /* Bo tròn nhiều hơn */
-    background-color: #66ccff;
-    color: #121217;
+.nav-link:hover {
+    background-color: #2a2a3a;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    background-color: #1f1f2e;
+    min-width: 180px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    padding: 8px 0;
+    display: none;
+    z-index: 100;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 8px 16px;
+    color: #eee;
+    text-decoration: none;
+    transition: background 0.3s;
+    background: transparent;
     border: none;
-    font-weight: bold;
+    width: 100%;
+    text-align: left;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-.chat-input-group button:hover {
-    background-color: #3399ff;
 }
 
-/* Responsive adjustments cho trang Live - giữ nguyên hoặc điều chỉnh breakpoint */
-@media (max-width: 992px) {
-    main.container[role="main"] {
-        flex-direction: column;
-        gap: 1rem; /* Giảm gap khi xếp chồng */
-        align-items: stretch; /* Vẫn giữ stretch để các phần tử con full width */
-    }
+.dropdown-item:hover {
+    background-color: #2a2a3a;
+}
 
-    .left-column,
-    .right-column {
-        flex: 1 1 100%;
-        max-width: none;
-    }
+.dropdown-divider {
+    border-top: 1px solid #333;
+    margin: 8px 0;
+}
 
-    .video-container {
-        /* Điều chỉnh chiều cao video container trên mobile nếu cần, ví dụ: */
-        /* height: 50vh; */
-        /* Hoặc để flex-grow hoạt động trong cột đã thu gọn */
-        min-height: 250px; /* Đảm bảo video không quá nhỏ */
+.dropdown-toggle::after {
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: middle;
+    content: "";
+    border-top: 4px solid;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+}
+
+.nav-item:hover .dropdown-menu,
+.nav-item:focus-within .dropdown-menu {
+    display: block;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .user-menu {
+        margin-top: 10px;
+        width: 100%;
     }
     
-    #live-video {
-         /* max-height không còn cần thiết ở đây nếu container kiểm soát */
-    }
-
-    .right-column {
-        max-height: 45vh; 
-        margin-top: 1rem;
-    }
-
-    .live-stream-page-title {
-        font-size: 1.5rem;
+    .dropdown-menu {
+        position: static;
+        width: 100%;
+        box-shadow: none;
     }
 }

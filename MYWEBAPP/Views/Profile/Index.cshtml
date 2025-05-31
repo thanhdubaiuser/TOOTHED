@@ -1,0 +1,126 @@
+@model MYWEBAPP.Models.User
+
+@{
+    ViewData["Title"] = "Trang cá nhân";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Thông tin tài khoản</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        @if (string.IsNullOrEmpty(Model.AvatarUrl))
+                        {
+                            <img src="/images/no-avatar.png" class="rounded-circle profile-avatar" alt="@Model.Username" />
+                        }
+                        else
+                        {
+                            <img src="@Model.AvatarUrl" class="rounded-circle profile-avatar" alt="@Model.Username" />
+                        }
+                    </div>
+
+                    <h5 class="card-title">@(string.IsNullOrEmpty(Model.FullName) ? Model.Username : Model.FullName)</h5>
+                    <p class="text-muted"><i class="fas fa-envelope"></i> @Model.Email</p>
+                    
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <p class="text-muted"><i class="fas fa-phone"></i> @Model.PhoneNumber</p>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Bio))
+                    {
+                        <div class="mt-3">
+                            <h6>Giới thiệu:</h6>
+                            <p>@Model.Bio</p>
+                        </div>
+                    }
+                    
+                    <div class="mt-3">
+                        <p class="mb-1"><strong>Ngày đăng ký:</strong> @Model.RegisteredAt.ToString("dd/MM/yyyy")</p>
+                        @if (Model.LastLoginAt.HasValue)
+                        {
+                            <p><strong>Đăng nhập gần nhất:</strong> @Model.LastLoginAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                        }
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a asp-action="Edit" class="btn btn-outline-primary">Chỉnh sửa thông tin</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Streams của tôi</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.LiveStreams != null && Model.LiveStreams.Any())
+                    {
+                        <div class="row">
+                            @foreach(var stream in Model.LiveStreams)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card stream-card">
+                                        <div class="stream-thumb" style="background-image: url('@(string.IsNullOrEmpty(stream.ThumbnailUrl) ? "/images/no-image.png" : stream.ThumbnailUrl)');">
+                                            @if (stream.IsLive)
+                                            {
+                                                <div class="live-badge">
+                                                    <i class="fas fa-circle"></i> LIVE
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title">@stream.Title</h5>
+                                            <p class="text-muted">@(stream.TotalViews) lượt xem</p>
+                                            <a href="/Streams/Details/@stream.Id" class="btn btn-sm btn-outline-primary">Xem</a>
+                                            <a href="/Streams/Edit/@stream.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-center">Bạn chưa có stream nào.</p>
+                        <div class="text-center">
+                            <a asp-controller="Streams" asp-action="Create" class="btn btn-primary">Tạo stream mới</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stream-card {
+        transition: transform 0.2s;
+        height: 100%;
+    }
+    
+    .stream-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stream-thumb {
+        height: 120px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+</style>
